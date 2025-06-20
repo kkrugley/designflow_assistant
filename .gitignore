@@ -15,3 +15,4 @@ venv/
 .env
 bot.db
 temp_images/
+last_messages_from_gemini.md

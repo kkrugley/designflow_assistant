@@ -68,7 +68,7 @@
 
 1.  **Клонируйте репозиторий:**
     ```bash
-    git clone https://github.com/kkrugley/designflow_assistant.git[1]
+    git clone https://github.com/kkrugley/designflow_assistant.git
     cd designflow_assistant
     ```
 
