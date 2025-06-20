@@ -1,5 +1,7 @@
 # file: bot/handlers/template_manager/handlers.py
+
 from aiogram import Router, F
+from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, Document
 
@@ -13,8 +15,9 @@ router = Router()
 async def manage_templates_handler(callback: CallbackQuery):
     await callback.answer()
     await callback.message.edit_text(
-        "🎨 **Управление шаблонами**",
-        reply_markup=get_template_manager_keyboard()
+        "🎨 <b>Управление шаблонами</b>",
+        reply_markup=get_template_manager_keyboard(),
+        parse_mode=ParseMode.HTML
     )
 
 @router.callback_query(F.data == "list_templates")
@@ -23,11 +26,11 @@ async def list_templates_handler(callback: CallbackQuery):
     if not templates:
         text = "У вас пока нет ни одного шаблона."
     else:
-        template_list = "\n".join([f"▪️ `{t.name}`" for t in templates])
-        text = f"**Сохраненные шаблоны:**\n\n{template_list}"
+        template_list = "\n".join([f"▪️ <code>{t.name}</code>" for t in templates])
+        text = f"<b>Сохраненные шаблоны:</b>\n\n{template_list}"
     
     await callback.answer()
-    await callback.message.edit_text(text, reply_markup=get_template_manager_keyboard())
+    await callback.message.edit_text(text, reply_markup=get_template_manager_keyboard(), parse_mode=ParseMode.HTML)
 
 # --- СЦЕНАРИЙ ДОБАВЛЕНИЯ ШАБЛОНА ---
 
@@ -45,10 +48,10 @@ async def process_template_name(message: Message, state: FSMContext):
 
 @router.message(AddTemplate.waiting_for_html, F.document)
 async def process_template_html(message: Message, state: FSMContext):
-    if not message.document.file_name.endswith('.html'):
-        await message.answer("Пожалуйста, отправьте файл с расширением .html")
+    if not message.document.file_name.endswith(('.html', '.htm')):
+        await message.answer("Пожалуйста, отправьте файл с расширением <code>.html</code>", parse_mode=ParseMode.HTML)
         return
-        
+            
     file = await message.bot.get_file(message.document.file_id)
     html_content_bytes = await message.bot.download_file(file.file_path)
     html_content = html_content_bytes.read().decode('utf-8')
@@ -59,28 +62,30 @@ async def process_template_html(message: Message, state: FSMContext):
         reply_markup=get_skip_css_keyboard()
     )
     await state.set_state(AddTemplate.waiting_for_css)
-    
+        
 async def save_template(message: Message, state: FSMContext):
-    """Вспомогательная функция для сохранения шаблона и завершения FSM."""
     user_data = await state.get_data()
+    template_name = user_data.get('name')
     try:
         await add_pdf_template(
-            name=user_data.get("name"),
+            name=template_name,
             html_content=user_data.get("html"),
-            css_content=user_data.get("css") # Будет None, если CSS пропущен
+            css_content=user_data.get("css")
         )
-        await message.answer(f"✅ Шаблон '{user_data.get('name')}' успешно сохранен!", reply_markup=get_template_manager_keyboard())
+        text = f"✅ Шаблон '<b>{template_name}</b>' успешно сохранен!"
+        await message.answer(text, reply_markup=get_template_manager_keyboard(), parse_mode=ParseMode.HTML)
     except Exception as e:
-        await message.answer(f"❌ Произошла ошибка при сохранении: {e}\n\nВозможно, имя шаблона не уникально.", reply_markup=get_template_manager_keyboard())
+        text = f"❌ Произошла ошибка при сохранении: {e}\n\n<i>Возможно, имя шаблона не уникально.</i>"
+        await message.answer(text, reply_markup=get_template_manager_keyboard(), parse_mode=ParseMode.HTML)
     
     await state.clear()
 
 @router.message(AddTemplate.waiting_for_css, F.document)
 async def process_template_css(message: Message, state: FSMContext):
     if not message.document.file_name.endswith('.css'):
-        await message.answer("Пожалуйста, отправьте файл с расширением .css")
+        await message.answer("Пожалуйста, отправьте файл с расширением <code>.css</code>", parse_mode=ParseMode.HTML)
         return
-        
+            
     file = await message.bot.get_file(message.document.file_id)
     css_content_bytes = await message.bot.download_file(file.file_path)
     css_content = css_content_bytes.read().decode('utf-8')

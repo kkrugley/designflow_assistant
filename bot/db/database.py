@@ -5,6 +5,7 @@ from bot.config import settings
 from .models import Base
 from .models import Project, StatusEnum
 from .models import PdfTemplate
+from .models import ProjectAsset, AssetTypeEnum
 from sqlalchemy import select
 
 # Создаем асинхронный "движок" для работы с БД
@@ -102,3 +103,34 @@ async def get_template_by_id(template_id: int) -> PdfTemplate | None:
     async with async_session_factory() as session:
         template = await session.get(PdfTemplate, template_id)
         return template
+    
+async def update_project_details(project_id: int, name: str = None, description: str = None):
+    """Обновляет название и/или описание проекта."""
+    async with async_session_factory() as session:
+        project = await session.get(Project, project_id)
+        if project:
+            if name:
+                project.name = name
+            if description:
+                project.description = description
+            await session.commit()
+            return project
+    return None
+
+async def add_project_asset(project_id: int, asset_type: AssetTypeEnum, telegram_file_id: str):
+    """Добавляет ассет (например, фото) к проекту."""
+    async with async_session_factory() as session:
+        new_asset = ProjectAsset(
+            project_id=project_id,
+            asset_type=asset_type,
+            telegram_file_id=telegram_file_id
+        )
+        session.add(new_asset)
+        await session.commit()
+
+async def get_project_assets(project_id: int) -> list[ProjectAsset]:
+    """Возвращает все ассеты для указанного проекта."""
+    async with async_session_factory() as session:
+        query = select(ProjectAsset).where(ProjectAsset.project_id == project_id)
+        result = await session.execute(query)
+        return result.scalars().all()

@@ -6,9 +6,16 @@ class AddProjectIdea(StatesGroup):
     """FSM для добавления новой идеи."""
     waiting_for_name = State()
     waiting_for_description = State()
+    waiting_for_photo = State()
     waiting_for_moodboard_choice = State()
     # Шаг с напоминанием отсюда убран!
 
 class ActivateProject(StatesGroup):
     """FSM для активации проекта и установки напоминания."""
     waiting_for_reminder = State()
+
+class EditProject(StatesGroup):
+    """FSM для редактирования проекта."""
+    choosing_action = State()
+    editing_name = State()
+    editing_description = State()

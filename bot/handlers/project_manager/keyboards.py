@@ -8,7 +8,6 @@ def get_project_manager_keyboard():
     builder.row(
         InlineKeyboardButton(text="📥 Добавить идею", callback_data="add_project_idea")
     )
-    # ⬇️⬇️⬇️ ДОБАВЛЯЕМ КНОПКУ ⬇️⬇️⬇️
     builder.row(
         InlineKeyboardButton(text="💡 Список идей", callback_data="list_idea_projects")
     )
@@ -21,7 +20,6 @@ def get_project_manager_keyboard():
     )
     return builder.as_markup()
 
-# ⬇️⬇️⬇️ New get_idea_management_keyboard ⬇️⬇️⬇️
 def get_project_card_keyboard(project_id: int, status: str, notion_page_url: str = None):
     """
     Создает универсальную клавиатуру для карточки проекта в зависимости от его статуса.
@@ -33,10 +31,7 @@ def get_project_card_keyboard(project_id: int, status: str, notion_page_url: str
         builder.row(
             InlineKeyboardButton(text="🚀 Активировать", callback_data=f"activate_project_{project_id}")
         )
-        builder.row(
-            InlineKeyboardButton(text="🗑 Удалить", callback_data=f"delete_project_{project_id}")
-        )
-
+    
     # Кнопки для статуса 'active'
     elif status == 'active':
         builder.row(
@@ -47,17 +42,45 @@ def get_project_card_keyboard(project_id: int, status: str, notion_page_url: str
     # Кнопки для статуса 'archived'
     # Пока ничего, но можно добавить "Разархивировать" в будущем
 
+    # Кнопка редактирования (для всех, кроме архива)
+    if status != 'archived':
+        builder.row(
+            InlineKeyboardButton(text="✏️ Редактировать", callback_data=f"edit_project_{project_id}")
+        )
+
     # Общая кнопка для всех, у кого есть страница в Notion
     if notion_page_url:
         builder.row(
             InlineKeyboardButton(text="📄 Открыть в Notion", url=notion_page_url)
         )
     
-    # Кнопка "Назад" к общему меню менеджера проектов
+    # Кнопка "Назад" к соответствующему списку
+    if status == 'idea':
+        back_callback = "list_idea_projects"
+    elif status == 'active':
+        back_callback = "list_active_projects"
+    else: # archived
+        back_callback = "list_archived_projects"
+        
     builder.row(
-        InlineKeyboardButton(text="⬅️ Назад", callback_data="project_manager")
+        InlineKeyboardButton(text="⬅️ Назад к списку", callback_data=back_callback)
     )
 
+    return builder.as_markup()
+
+def get_edit_project_keyboard(project_id: int):
+    """Клавиатура для выбора, что редактировать в проекте."""
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text="Название", callback_data=f"edit_name_{project_id}")
+    )
+    builder.row(
+        InlineKeyboardButton(text="Описание", callback_data=f"edit_desc_{project_id}")
+    )
+    # Кнопка "Назад" к карточке проекта
+    builder.row(
+        InlineKeyboardButton(text="⬅️ Назад к проекту", callback_data=f"show_project_{project_id}")
+    )
     return builder.as_markup()
 
 def get_reminder_keyboard():
@@ -82,5 +105,13 @@ def get_moodboard_choice_keyboard():
     builder.row(
         InlineKeyboardButton(text="Да, создать мудборд ✨", callback_data="moodboard_yes"),
         InlineKeyboardButton(text="Пропустить ➡️", callback_data="moodboard_no")
+    )
+    return builder.as_markup()
+
+def get_skip_photo_keyboard():
+    """Клавиатура с кнопкой для пропуска шага добавления фото."""
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text="Пропустить шаг ➡️", callback_data="skip_photo")
     )
     return builder.as_markup()

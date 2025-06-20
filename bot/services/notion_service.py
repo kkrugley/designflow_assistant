@@ -10,7 +10,7 @@ class NotionService:
     def __init__(self):
         self.client = AsyncClient(auth=settings.notion_api_key)
         self.database_id = settings.notion_db_id
-        # ⬇️⬇️⬇️ Считываем имена колонок из настроек ⬇️⬇️⬇️
+        # Считываем имена колонок из настроек
         self.title_prop = settings.notion_title_property_name
         self.status_prop = settings.notion_status_property_name
 
@@ -21,7 +21,6 @@ class NotionService:
         """
         parent = {"database_id": self.database_id}
         properties = {
-            # ⬇️⬇️⬇️ Используем переменные вместо "Name" и "Status" ⬇️⬇️⬇️
             self.title_prop: {"title": [{"text": {"content": name}}]},
             self.status_prop: {"select": {"name": status}}
         }
@@ -52,11 +51,42 @@ class NotionService:
         try:
             await self.client.pages.update(
                 page_id=page_id,
-                # ⬇️⬇️⬇️ Используем переменную вместо "Status" ⬇️⬇️⬇️
                 properties={self.status_prop: {"select": {"name": new_status}}}
             )
         except Exception as e:
             print(f"Ошибка при обновлении статуса страницы Notion: {e}")
+            
+    async def update_page_properties(self, page_id: str, name: str = None, description: str = None):
+        """Обновляет свойства и контент на странице Notion."""
+        try:
+            properties_to_update = {}
+            if name:
+                properties_to_update[self.title_prop] = {"title": [{"text": {"content": name}}]}
+            
+            # Обновляем свойства (название)
+            if properties_to_update:
+                await self.client.pages.update(page_id=page_id, properties=properties_to_update)
+
+            # Обновляем контент (описание)
+            if description:
+                # Сначала получаем все блоки на странице
+                blocks_response = await self.client.blocks.children.list(block_id=page_id)
+                # Удаляем все существующие параграфы, чтобы заменить их новым
+                for block in blocks_response.get('results', []):
+                    if block.get('type') == 'paragraph':
+                        await self.client.blocks.delete(block_id=block['id'])
+                
+                # Добавляем новый блок с новым описанием
+                await self.client.blocks.children.append(
+                    block_id=page_id,
+                    children=[{
+                        "object": "block", 
+                        "type": "paragraph",
+                        "paragraph": {"rich_text": [{"type": "text", "text": {"content": description}}]}
+                    }]
+                )
+        except Exception as e:
+            print(f"Ошибка при обновлении страницы Notion: {e}")
 
     async def archive_page(self, page_id: str):
         """Архивирует (удаляет) страницу в Notion."""
@@ -68,4 +98,5 @@ class NotionService:
         except Exception as e:
             print(f"Ошибка при архивации страницы Notion: {e}")
 
+# Создаем глобальный экземпляр сервиса для использования в хэндлерах
 notion_service = NotionService()
