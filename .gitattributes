@@ -1,0 +1,18 @@
+# Файл: .gitattributes
+
+# Установить для всех текстовых файлов универсальное поведение
+* text=auto
+
+# Явно указать, что файлы Python всегда должны использовать LF
+*.py text eol=lf
+*.pyw text eol=lf
+
+# Файлы конфигурации и шаблонов тоже
+*.ini text eol=lf
+*.mako text eol=lf
+*.txt text eol=lf
+*.md text eol=lf
+
+# Указать, что .env и .db не являются текстовыми файлами (бинарные)
+.env binary
+.db binary

@@ -1,0 +1,23 @@
+# Файл: requirements.txt
+
+# --- Основные фреймворки и утилиты ---
+aiogram==3.5.0
+python-dotenv
+pydantic
+pydantic-settings
+alembic
+
+# --- База данных ---
+sqlalchemy[asyncio]
+aiosqlite
+apscheduler
+
+# --- Внешние API и HTTP-клиенты ---
+notion-client
+httpx
+
+# --- Генерация контента ---
+weasyprint
+jinja2
+fal-client  
+deep-translator 

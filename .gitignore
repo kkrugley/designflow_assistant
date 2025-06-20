@@ -1,0 +1,17 @@
+# .gitignore
+
+# Python
+__pycache__/
+*.pyc
+
+# Venv
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Local files
+.env
+bot.db
+temp_images/
