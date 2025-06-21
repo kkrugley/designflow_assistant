@@ -1,6 +1,7 @@
 # file: bot/config.py
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field
 
 class Settings(BaseSettings):
     """
@@ -22,7 +23,7 @@ class Settings(BaseSettings):
     fal_api_key: str
 
     # Настройки базы данных
-    db_url: str = "sqlite+aiosqlite:///bot.db" # Путь к файлу БД по умолчанию
+    db_url: str = Field(default="sqlite+aiosqlite:///bot.db", alias="DATABASE_URL")
 
     # Используем SettingsConfigDict для указания источника - файла .env
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
@@ -30,6 +31,10 @@ class Settings(BaseSettings):
 
 # Создаем глобальный экземпляр настроек, который будет использоваться во всем проекте
 settings = Settings()
+
+# Исправляем URL для асинхронной SQLAlchemy, если это Heroku
+if settings.db_url.startswith("postgres://"):
+    settings.db_url = settings.db_url.replace("postgres://", "postgresql+asyncpg://", 1)
 
 # =========================================================================
 # --- ВРЕМЕННАЯ ДИАГНОСТИКА ---

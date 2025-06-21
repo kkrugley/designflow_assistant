@@ -14,5 +14,6 @@ venv/
 # Local files
 .env
 bot.db
+bot.db-journal
 temp_images/
 last_messages_from_gemini.md
