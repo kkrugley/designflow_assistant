@@ -2,6 +2,10 @@
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
+from typing import Optional
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Settings(BaseSettings):
     """
@@ -10,6 +14,9 @@ class Settings(BaseSettings):
     # Telegram
     bot_token: str
     telegram_user_id: int
+    
+    # Cloud Run (опционально)
+    cloud_run_url: Optional[str] = None
 
     # Notion
     notion_api_key: str
@@ -25,22 +32,15 @@ class Settings(BaseSettings):
     # Настройки базы данных
     db_url: str = Field(default="sqlite+aiosqlite:///bot.db", alias="DATABASE_URL")
 
-    # Используем SettingsConfigDict для указания источника - файла .env
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=".env", 
+        env_file_encoding="utf-8",
+        extra='ignore'
+    )
 
-
-# Создаем глобальный экземпляр настроек, который будет использоваться во всем проекте
+# Создаем глобальный экземпляр настроек
 settings = Settings()
 
-# Исправляем URL для асинхронной SQLAlchemy, если это Heroku
-if settings.db_url.startswith("postgres://"):
+# Исправляем URL для асинхронной SQLAlchemy, если это Heroku или Cloud Run
+if settings.db_url and "postgres://" in settings.db_url:
     settings.db_url = settings.db_url.replace("postgres://", "postgresql+asyncpg://", 1)
-
-# =========================================================================
-# --- ВРЕМЕННАЯ ДИАГНОСТИКА ---
-# =========================================================================
-print("--- DEBUG: Считанные настройки Notion ---")
-print(f"Имя колонки-заголовка: '{settings.notion_title_property_name}'")
-print(f"Имя колонки-статуса:  '{settings.notion_status_property_name}'")
-print("---------------------------------------")
-# =========================================================================

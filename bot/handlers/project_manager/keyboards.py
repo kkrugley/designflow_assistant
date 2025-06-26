@@ -1,6 +1,7 @@
 # file: bot/handlers/project_manager/keyboards.py
 
 from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardButton
+from typing import Optional
 
 def get_project_manager_keyboard():
     """Создает клавиатуру для главного меню менеджера проектов."""
@@ -20,7 +21,7 @@ def get_project_manager_keyboard():
     )
     return builder.as_markup()
 
-def get_project_card_keyboard(project_id: int, status: str, notion_page_url: str = None):
+def get_project_card_keyboard(project_id: int, status: str, notion_page_url: Optional[str] = None):
     """
     Создает универсальную клавиатуру для карточки проекта в зависимости от его статуса.
     """
