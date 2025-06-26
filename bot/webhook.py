@@ -3,11 +3,12 @@ from fastapi import FastAPI, Request
 from aiogram import Bot, Dispatcher, types
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.client.default import DefaultBotProperties # <--- ИСПРАВЛЕННЫЙ ИМПОРТ
+from aiogram.client.default import DefaultBotProperties
 
 from bot.config import settings
 from bot.handlers import main_router
 from bot.middlewares.access import AccessMiddleware
+from bot.scheduler import setup_scheduler, scheduler 
 
 # Инициализация FastAPI
 app = FastAPI(docs_url=None, redoc_url=None)
@@ -17,16 +18,16 @@ bot = Bot(token=settings.bot_token, default=DefaultBotProperties(parse_mode=Pars
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 
-# Регистрируем middleware и роутеры
 dp.update.middleware(AccessMiddleware(admin_id=settings.telegram_user_id))
 dp.include_router(main_router)
 
-# URL для вебхука
 WEBHOOK_PATH = f"/webhook/{settings.bot_token}"
 
 @app.on_event("startup")
 async def on_startup():
-    # URL, который предоставит Cloud Run. Мы передадим его через переменную окружения.
+    # Настраиваем и запускаем планировщик
+    setup_scheduler(bot) # ⬅️ Запускаем планировщик здесь
+    
     if settings.cloud_run_url:
         webhook_url = f"https://{settings.cloud_run_url}{WEBHOOK_PATH}"
         await bot.set_webhook(url=webhook_url)
@@ -39,6 +40,8 @@ async def bot_webhook(update: dict):
 
 @app.on_event("shutdown")
 async def on_shutdown():
+    # Останавливаем планировщик и закрываем сессию бота
+    scheduler.shutdown() # ⬅️ Останавливаем планировщик здесь
     await bot.session.close()
 
 @app.get("/")

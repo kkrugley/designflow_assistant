@@ -39,7 +39,7 @@ async def main():
     dp.include_router(main_router)
 
     # Запуск планировщика
-    setup_scheduler(bot)
+##    setup_scheduler(bot)
 
     # Запуск бота
     try:
