@@ -20,9 +20,13 @@ async def create_db_and_tables():
     """
     Функция для создания всех таблиц в базе данных.
     Вызывается один раз при старте приложения.
+    Также загружает демо-шаблон при первом запуске.
     """
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    # Загружаем демо-шаблон при первом запуске
+    await _load_demo_template_if_not_exists()
 
 async def create_project_idea(name: str, description: str = None) -> Project:
     """
@@ -132,4 +136,44 @@ async def get_project_assets(project_id: int) -> list[ProjectAsset]:
     async with async_session_factory() as session:
         query = select(ProjectAsset).where(ProjectAsset.project_id == project_id)
         result = await session.execute(query)
+        return result.scalars().all()
+
+
+async def _load_demo_template_if_not_exists():
+    """
+    Загружает демо-шаблон в базу данных при первом запуске,
+    если шаблонов еще нет.
+    """
+    try:
+        # Проверяем, есть ли уже шаблоны
+        templates = await get_all_templates()
+        if templates:
+            return  # Шаблоны уже есть, не загружаем демо
+
+        # Читаем демо-шаблон из файла
+        demo_template_path = "demo_template.html"
+        try:
+            with open(demo_template_path, 'r', encoding='utf-8') as f:
+                html_content = f.read()
+        except FileNotFoundError:
+            print(f"Предупреждение: демо-шаблон {demo_template_path} не найден")
+            return
+
+        # Загружаем демо-шаблон в базу данных
+        await add_pdf_template(
+            name="Demo Professional Template",
+            html_content=html_content,
+            css_content=None  # Стили встроены в HTML
+        )
+
+        print("✅ Демо-шаблон успешно загружен в базу данных")
+
+    except Exception as e:
+        print(f"Ошибка при загрузке демо-шаблона: {e}")
+
+
+async def get_all_templates() -> list[PdfTemplate]:
+    """Возвращает все сохраненные шаблоны PDF."""
+    async with async_session_factory() as session:
+        result = await session.execute(select(PdfTemplate).order_by(PdfTemplate.name))
         return result.scalars().all()

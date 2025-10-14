@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     llm_api_key: str
     llm_api_endpoint: str = "https://openrouter.ai/api/v1/chat/completions"
     llm_model: str = "meta-llama/llama-3.3-70b-instruct:free"
+    google_ai_api_key: str
 
     # Настройки базы данных
     db_url: str = Field(default="sqlite+aiosqlite:///bot.db", alias="DATABASE_URL")

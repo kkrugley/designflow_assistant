@@ -1,6 +1,7 @@
 # file: bot/services/pdf_generator.py
 
 import io
+from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
 from weasyprint import HTML, CSS
 from weasyprint.text.fonts import FontConfiguration
@@ -33,7 +34,8 @@ async def create_project_card_pdf(
     rendered_html = template.render(
         project_name=project_name,
         project_description=project_description,
-        images=images_paths
+        images=images_paths,
+        current_date=datetime.now().strftime("%B %d, %Y")
     )
 
     font_config = FontConfiguration()
