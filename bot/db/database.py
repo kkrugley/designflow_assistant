@@ -171,9 +171,3 @@ async def _load_demo_template_if_not_exists():
     except Exception as e:
         print(f"Ошибка при загрузке демо-шаблона: {e}")
 
-
-async def get_all_templates() -> list[PdfTemplate]:
-    """Возвращает все сохраненные шаблоны PDF."""
-    async with async_session_factory() as session:
-        result = await session.execute(select(PdfTemplate).order_by(PdfTemplate.name))
-        return result.scalars().all()

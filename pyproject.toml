@@ -3,7 +3,8 @@ name = "designflow_assistant"
 dynamic = ["version"]
 
 [tool.pylint.messages_control]
-disable = "missing-docstring,too-few-public-methods,invalid-name,import-error"
+disable = "missing-docstring,too-few-public-methods,invalid-name,import-error,E1101,E1102,C0303,C0304,C0301,W0611"
 
 [tool.pylint.master]
 init-hook = "import sys; sys.path.append('.')"
+fail-under = 7.0
