@@ -30,7 +30,6 @@ from bot.db.database import (
     add_project_asset,
     get_project_assets
 )
-from bot.services.notion_service import notion_service
 from bot.services.fal_service import generate_moodboard
 
 
@@ -53,15 +52,13 @@ async def _show_project_card(message: Message, project_id: int):
     assets = await get_project_assets(project.id)
     reference_image = next((asset for asset in assets if asset.asset_type == AssetTypeEnum.IMAGE_REFERENCE), None)
 
-    notion_url = f"https://www.notion.so/{project.notion_page_id.replace('-', '')}" if project.notion_page_id else None
-    
     card_text = (
         f"<b>Проект: {project.name}</b>\n\n"
         f"Статус: <code>{project.status.value}</code>\n\n"
         f"<b>Описание:</b>\n<i>{project.description}</i>"
     )
-    
-    keyboard = get_project_card_keyboard(project.id, project.status.value, notion_url)
+
+    keyboard = get_project_card_keyboard(project.id, project.status.value)
 
     if reference_image:
         try:
@@ -165,17 +162,7 @@ async def process_moodboard_choice_and_finish(callback: CallbackQuery, state: FS
             telegram_file_id=photo_file_id
         )
 
-    notion_result = await notion_service.create_project_page(
-        name=project_name, status=StatusEnum.IDEA.value, description=description
-    )
-    
     text_after_creation = f"✅ Идея '<b>{project_name}</b>' сохранена!"
-    if notion_result:
-        notion_page_id, notion_url = notion_result
-        await update_project_after_creation(project_id=new_project.id, notion_page_id=notion_page_id, reminder_interval=0)
-        text_after_creation += f"\n\n📄 <a href='{notion_url}'>Открыть страницу в Notion</a>"
-    else:
-        text_after_creation += "\n\n<i>Не удалось создать страницу в Notion.</i>"
 
     await callback.message.edit_text(
         text_after_creation,
@@ -217,10 +204,7 @@ async def process_activation_reminder(callback: CallbackQuery, state: FSMContext
 
     project = await update_project_status(project_id, StatusEnum.ACTIVE)
     if project:
-        await update_project_after_creation(project.id, project.notion_page_id, interval)
-
-    if project and project.notion_page_id:
-        await notion_service.update_page_status(project.notion_page_id, StatusEnum.ACTIVE.value)
+        await update_project_after_creation(project.id, interval)
     
     await callback.message.edit_text(
         "✅ Проект <b>активирован</b> и взят в работу!", 
@@ -306,8 +290,6 @@ async def process_new_name(message: Message, state: FSMContext):
     new_name = message.text
 
     project = await update_project_details(project_id=project_id, name=new_name)
-    if project and project.notion_page_id:
-        await notion_service.update_page_properties(page_id=project.notion_page_id, name=new_name)
         
     await state.clear()
     # Показываем обновленную карточку проекта, а не просто сообщение
@@ -333,8 +315,6 @@ async def process_new_description(message: Message, state: FSMContext):
     new_description = message.text
 
     project = await update_project_details(project_id=project_id, description=new_description)
-    if project and project.notion_page_id:
-        await notion_service.update_page_properties(page_id=project.notion_page_id, description=new_description)
         
     await state.clear()
     # Показываем обновленную карточку проекта
@@ -350,8 +330,6 @@ async def archive_project_handler(callback: CallbackQuery):
     project_id = int(project_id_str)
     
     project = await update_project_status(project_id, StatusEnum.ARCHIVED)
-    if project and project.notion_page_id:
-        await notion_service.update_page_status(project.notion_page_id, StatusEnum.ARCHIVED.value)
             
     alert_text = "✅ Проект завершен и перенесен в архив." if action == "complete" else "❌ Проект отменен и перенесен в архив."
     await callback.answer(alert_text, show_alert=True)
@@ -362,8 +340,6 @@ async def delete_project_handler(callback: CallbackQuery):
     project_id = int(callback.data.split("_")[2])
     project = await get_project_by_id(project_id)
     
-    if project and project.notion_page_id:
-        await notion_service.archive_page(project.notion_page_id)
         
     await delete_project(project_id)
     await callback.answer("🗑 Идея удалена.", show_alert=True)

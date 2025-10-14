@@ -28,19 +28,18 @@ async def check_active_projects(bot: Bot, *args, **kwargs): # Добавил *ar
                 from bot.handlers.project_manager.keyboards import get_project_card_keyboard
                 
                 user_id = settings.telegram_user_id
-                notion_url = f"https://www.notion.so/{project.notion_page_id.replace('-', '')}" if project.notion_page_id else None
-                
+
                 text = (
                     f"👋 <b>Привет! Как продвигается работа над проектом</b>\n"
                     f"<b>'{project.name}'</b>?\n\n"
                     "<i>Не забывай о сроках! 😉</i>"
                 )
-                
+
                 try:
                     await bot.send_message(
                         chat_id=user_id,
                         text=text,
-                        reply_markup=get_project_card_keyboard(project.id, project.status.value, notion_url),
+                        reply_markup=get_project_card_keyboard(project.id, project.status.value),
                         parse_mode=ParseMode.HTML
                     )
                     project.last_reminded_at = datetime.now()

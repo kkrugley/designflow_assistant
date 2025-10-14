@@ -39,12 +39,11 @@ async def create_project_idea(name: str, description: str = None) -> Project:
         await session.refresh(new_project)
         return new_project
 
-async def update_project_after_creation(project_id: int, notion_page_id: str, reminder_interval: int) -> None:
-    """Обновляет проект после создания, добавляя ID Notion и интервал напоминания."""
+async def update_project_after_creation(project_id: int, reminder_interval: int) -> None:
+    """Обновляет проект после создания, добавляя интервал напоминания."""
     async with async_session_factory() as session:
         project = await session.get(Project, project_id)
         if project:
-            project.notion_page_id = notion_page_id
             if reminder_interval > 0:
                 project.reminder_interval_days = reminder_interval
             await session.commit()

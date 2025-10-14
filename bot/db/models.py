@@ -43,7 +43,6 @@ class Project(Base):
     name: Mapped[str] = mapped_column(String(255))
     description: Mapped[str] = mapped_column(Text, nullable=True)
     status: Mapped[StatusEnum] = mapped_column(Enum(StatusEnum), default=StatusEnum.IDEA)
-    notion_page_id: Mapped[str] = mapped_column(String(255), nullable=True)
     reminder_interval_days: Mapped[int] = mapped_column(Integer, nullable=True)
     last_reminded_at: Mapped[datetime.datetime] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=func.now())

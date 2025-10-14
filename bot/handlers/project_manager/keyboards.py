@@ -20,7 +20,7 @@ def get_project_manager_keyboard():
     )
     return builder.as_markup()
 
-def get_project_card_keyboard(project_id: int, status: str, notion_page_url: str = None):
+def get_project_card_keyboard(project_id: int, status: str):
     """
     Создает универсальную клавиатуру для карточки проекта в зависимости от его статуса.
     """
@@ -48,11 +48,6 @@ def get_project_card_keyboard(project_id: int, status: str, notion_page_url: str
             InlineKeyboardButton(text="✏️ Редактировать", callback_data=f"edit_project_{project_id}")
         )
 
-    # Общая кнопка для всех, у кого есть страница в Notion
-    if notion_page_url:
-        builder.row(
-            InlineKeyboardButton(text="📄 Открыть в Notion", url=notion_page_url)
-        )
     
     # Кнопка "Назад" к соответствующему списку
     if status == 'idea':
