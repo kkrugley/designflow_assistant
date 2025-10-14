@@ -27,7 +27,7 @@ SOCIAL_MEDIA_PROMPT = """Создай лаконичный текст для с�
 
 async def generate_text_from_draft(prompt_template: str, draft: str) -> str | None:
     """
-    Генерирует текст с помощью LLM API (Gemini).
+    Генерирует текст с помощью OpenRouter API (Llama 3.3).
 
     :param prompt_template: Шаблон промпта (PDF_CARD_PROMPT или SOCIAL_MEDIA_PROMPT).
     :param draft: Черновик текста от пользователя.
@@ -37,32 +37,38 @@ async def generate_text_from_draft(prompt_template: str, draft: str) -> str | No
     final_prompt = prompt_template.replace("[Draft]", draft)
 
     headers = {
+        "Authorization": f"Bearer {settings.llm_api_key}",
         "Content-Type": "application/json",
+        "HTTP-Referer": "https://designflow-assistant.com",  # Можно заменить на ваш домен
+        "X-Title": "DesignFlow Assistant Bot"
     }
-    
-    # Структура тела запроса для Gemini API
+
+    # Структура тела запроса для OpenRouter API
     json_data = {
-        "contents": [{
-            "parts": [{"text": final_prompt}]
-        }]
+        "model": settings.llm_model,
+        "messages": [
+            {
+                "role": "user",
+                "content": final_prompt
+            }
+        ],
+        "temperature": 0.7,
+        "max_tokens": 1000
     }
-    
-    # URL с ключом API
-    url = f"{settings.llm_api_endpoint}?key={settings.llm_api_key}"
 
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(url, headers=headers, json=json_data)
+            response = await client.post(settings.llm_api_endpoint, headers=headers, json=json_data)
             response.raise_for_status() # Вызовет исключение для кодов 4xx/5xx
-            
+
             data = response.json()
-            # Извлекаем текст из сложной структуры ответа Gemini
-            generated_text = data["candidates"][0]["content"]["parts"][0]["text"]
+            # Извлекаем текст из структуры ответа OpenRouter
+            generated_text = data["choices"][0]["message"]["content"]
             return generated_text.strip()
-            
+
     except httpx.HTTPStatusError as e:
-        print(f"Ошибка HTTP при обращении к LLM API: {e.response.status_code} - {e.response.text}")
+        print(f"Ошибка HTTP при обращении к OpenRouter API: {e.response.status_code} - {e.response.text}")
         return None
     except Exception as e:
-        print(f"Непредвиденная ошибка при обращении к LLM API: {e}")
+        print(f"Непредвиденная ошибка при обращении к OpenRouter API: {e}")
         return None
