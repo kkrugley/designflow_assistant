@@ -1,3 +1,4 @@
+[![Pylint](https://github.com/kkrugley/designflow_assistant/actions/workflows/pylint.yml/badge.svg)](https://github.com/kkrugley/designflow_assistant/actions/workflows/pylint.yml)
 # Designflow Assistant: Ваш Персональный Ассистент Дизайнера в Telegram
 
 **Designflow Assistant** — это приватный Telegram-бот, созданный как персональный ассистент для промышленных дизайнеров и креативных специалистов. Он помогает систематизировать идеи, управлять проектами от замысла до архивации и автоматизировать создание презентационных материалов, работая исключительно для вас.
