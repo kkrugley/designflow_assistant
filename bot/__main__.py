@@ -4,6 +4,7 @@ import asyncio
 import logging
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.client.default import DefaultBotProperties
 
 from bot.config import settings
 from bot.db.database import create_db_and_tables
@@ -29,7 +30,7 @@ async def main():
 
     # Инициализация бота и диспетчера
     # Используем MemoryStorage для FSM, для начала этого достаточно
-    bot = Bot(token=settings.bot_token, parse_mode="HTML")
+    bot = Bot(token=settings.bot_token, default=DefaultBotProperties(parse_mode='HTML'))
     dp = Dispatcher(storage=MemoryStorage())
 
     # --- РЕГИСТРАЦИЯ КОМПОНЕНТОВ ---
